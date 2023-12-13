@@ -7,10 +7,13 @@
 # Target Group Retrieval: The get_gwlb_details function assumes there's only one target group associated with the GWLB. If there are multiple target groups, this logic should be adjusted.
 # Safety Checks: Consider adding more checks and logs to ensure each step completes successfully before proceeding to the next.
 
+# This script provides a structured approach to automate the deletion of resources in an AWS environment, but due to the potential 
+# impact of these operations, careful consideration and testing are advised.
 
 import boto3
 from time import sleep
 
+# Initialize AWS clients
 elbv2_client = boto3.client('elbv2')
 ec2_client = boto3.client('ec2')
 
@@ -45,40 +48,42 @@ def delete_gwlb(gwlb_arn):
     elbv2_client.delete_load_balancer(LoadBalancerArn=gwlb_arn)
 
 def delete_gwlb_endpoints(vpc_id):
-    # Assuming endpoints are tagged or named to identify them as belonging to the specific VPC
     response = ec2_client.describe_vpc_endpoints(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}])
     endpoint_ids = [endpoint['VpcEndpointId'] for endpoint in response['VpcEndpoints']]
     for endpoint_id in endpoint_ids:
         ec2_client.delete_vpc_endpoints(VpcEndpointIds=[endpoint_id])
 
-# Replace with your values
-gwlb_name = 'my-gwlb'
-vpc_id = 'vpc-12345678'
+def main():
+    # Replace with your values
+    gwlb_name = 'my-gwlb'
+    vpc_id = 'vpc-12345678'
 
-# Workflow execution
-gwlb, target_group_arn = get_gwlb_details(gwlb_name)
-print("Gateway Load Balancer Details:", gwlb)
+    # Workflow execution
+    gwlb, target_group_arn = get_gwlb_details(gwlb_name)
+    print("Gateway Load Balancer Details:", gwlb)
 
-targets = get_registered_targets(target_group_arn)
-print("Registered Targets:", targets)
+    targets = get_registered_targets(target_group_arn)
+    print("Registered Targets:", targets)
 
-deregister_targets(target_group_arn, targets)
-print("Targets Deregistered")
+    deregister_targets(target_group_arn, targets)
+    print("Targets Deregistered")
 
-terminate_ec2_instances(targets)
-print("EC2 Instances Termination Initiated")
+    terminate_ec2_instances(targets)
+    print("EC2 Instances Termination Initiated")
 
-check_instances_terminated(targets)
-print("EC2 Instances Terminated")
+    check_instances_terminated(targets)
+    print("EC2 Instances Terminated")
 
-delete_target_group(target_group_arn)
-print("Target Group Deleted")
+    delete_target_group(target_group_arn)
+    print("Target Group Deleted")
 
-delete_gwlb_endpoints(vpc_id)
-print("GWLB Endpoints Deleted")
+    delete_gwlb_endpoints(vpc_id)
+    print("GWLB Endpoints Deleted")
 
-delete_gwlb(gwlb['LoadBalancerArn'])
-print("GWLB Deleted")
+    delete_gwlb(gwlb['LoadBalancerArn'])
+    print("GWLB Deleted")
 
-print("Deletion process completed.")
+    print("Deletion process completed.")
 
+if __name__ == "__main__":
+    main()
