@@ -9,7 +9,21 @@
 # This script provides a structured approach to automate the deletion of resources in an AWS environment, but due to the potential 
 # impact of these operations, careful consideration and testing are advised.
 
-iimport boto3
+"""
+The Following are the worflow configurations:
+1. Get_gwlb_details along with with Target Group, which list EC2 Instances.
+2. Validate the details against it using get_registered_targets(target_group_arn)
+3. Deregister the target group
+4. Terminate the EC2 instances
+5. Validate the EC2 instances status
+6. Delete the Target Group
+7. validate the details
+8. Delete the GWLB endpoints
+9. Delete the GWLB
+10. Log the details.
+"""
+
+import boto3
 from botocore.exceptions import ClientError, BotoCoreError
 from time import sleep
 
