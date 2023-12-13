@@ -33,20 +33,26 @@ ec2_client = boto3.client('ec2')
 
 def get_gwlb_details(gwlb_name):
     """
-    Retrieves the details of a specified Gateway Load Balancer and its first associated target group.
+    Retrieves the details of a specified Gateway Load Balancer and its associated target groups.
     Args:
     - gwlb_name: Name of the Gateway Load Balancer
     Returns:
-    - Tuple containing GWLB details and Target Group ARN
+    - GWLB details and a list of Target Group ARNs
     """
     try:
-        response = elbv2_client.describe_load_balancers(Names=[gwlb_name])
-        gwlb = response['LoadBalancers'][0]
-        target_group_arn = gwlb['TargetGroups'][0]['TargetGroupArn']  # Assuming single target group
-        return gwlb, target_group_arn
+        # Get GWLB details
+        gwlb_response = elbv2_client.describe_load_balancers(Names=[gwlb_name])
+        gwlb = gwlb_response['LoadBalancers'][0]
+        gwlb_arn = gwlb['LoadBalancerArn']
+
+        # Get Target Groups associated with the GWLB
+        target_groups_response = elbv2_client.describe_target_groups(LoadBalancerArn=gwlb_arn)
+        target_group_arns = [tg['TargetGroupArn'] for tg in target_groups_response['TargetGroups']]
+
+        return gwlb, target_group_arns
     except ClientError as e:
         print(f"Error retrieving GWLB details: {e}")
-        return None, None
+        return None, []
 
 def get_registered_targets(target_group_arn):
     """
