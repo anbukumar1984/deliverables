@@ -97,3 +97,29 @@ def disassociate_route_tables(vpc_endpoint_id, vpc_id):
     except ClientError as e:
         print(f"Error disassociating route tables: {e}")
 
+
+# 1. Disassociate Route Tables from the VPC Endpoint
+
+def disassociate_route_tables_from_vpce(vpc_endpoint_id, vpc_id):
+    """
+    Disassociates route tables from the specified VPC Endpoint.
+    Args:
+    - vpc_endpoint_id: ID of the VPC Endpoint
+    - vpc_id: ID of the VPC
+    """
+    try:
+        # Describe route tables in the VPC
+        route_tables = ec2_client.describe_route_tables(Filters=[{'Name': 'vpc-id', 'Values': [vpc_id]}])
+        for rt in route_tables['RouteTables']:
+            # Iterate over routes and identify the ones associated with the VPCE
+            for route in rt['Routes']:
+                if 'VpcEndpointId' in route and route['VpcEndpointId'] == vpc_endpoint_id:
+                    # Delete the specific route associated with the VPCE
+                    ec2_client.delete_route(
+                        RouteTableId=rt['RouteTableId'],
+                        DestinationCidrBlock=route['DestinationCidrBlock']
+                    )
+                    print(f"Disassociated route from table {rt['RouteTableId']}")
+    except ClientError as e:
+        print(f"Error disassociating route tables from VPCE: {e}")
+
