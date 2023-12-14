@@ -15,7 +15,7 @@ def get_registered_targets(target_group_arn):
         print(f"Error retrieving registered targets: {e}")
         return []
 
-# 2. 
+# 2. Map IPs to Instance IDs
 
 def map_ips_to_instance_ids(ip_addresses):
     """
